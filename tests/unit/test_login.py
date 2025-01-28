@@ -43,21 +43,21 @@ class LendaryLoginTest:
         try:
             options = Options()
             
-            # BrowserStack capabilities
+            # BrowserStack capabilities (Corrected)
             browserstack_options = {
-                'browserName': 'Chrome',
-                'browserVersion': 'latest',
-                'os': 'Windows',
-                'os_version': '10',
-                'name': 'Lendary Login Test',
-                'build': os.getenv('GITHUB_SHA', 'local_build'),
-                'browserstack.local': 'true',  # Enable for local testing
-                'browserstack.debug': 'true',
-                'browserstack.networkLogs': 'true',
-                'browserstack.console': 'verbose'
+                'caps': {  # The 'caps' key is essential
+                    'browserName': 'Chrome',
+                    'browserVersion': 'latest',
+                    'os': 'Windows',
+                    'os_version': '10',
+                    'name': 'Lendary Login Test',
+                    'build': os.getenv('GITHUB_SHA', 'local_build'),
+                    'browserstack.local': 'true',
+                    'browserstack.debug': 'true',
+                    'browserstack.networkLogs': 'true',
+                    'browserstack.console': 'verbose'
+                }
             }
-            
-            # Set capabilities
             options.set_capability('bstack:options', browserstack_options)
             
             # Get BrowserStack credentials from environment variables
@@ -67,14 +67,10 @@ class LendaryLoginTest:
             if not username or not access_key:
                 raise ValueError("BrowserStack credentials not found in environment variables")
             
-            # Use ClientConfig for authentication (Corrected)
-            config = ClientConfig(
-                username=username, 
-                password=access_key, 
-                remote_server_addr="https://hub-cloud.browserstack.com/wd/hub"
-            )
+            # Use ClientConfig for authentication (Corrected & Updated)
+            config = ClientConfig(username=username, password=access_key)
             hub_url = "https://hub-cloud.browserstack.com/wd/hub"  # URL without credentials
-            executor = RemoteConnection(hub_url, client_config=config)
+            executor = RemoteConnection(url=hub_url, client_config=config) # Updated for DeprecationWarning
             self.driver = webdriver.Remote(command_executor=executor, options=options)
 
             logger.info("WebDriver setup successful")

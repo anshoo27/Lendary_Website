@@ -1,0 +1,2 @@
+2025-01-28 10:21:34,631 - ERROR - Failed to setup WebDriver: BrowserStack credentials not found in environment variables
+2025-01-28 10:21:34,632 - ERROR - Test failed: BrowserStack credentials not found in environment variables

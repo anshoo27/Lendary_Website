@@ -1,5 +1,4 @@
 name: Selenium Tests with BrowserStack
-
 on:
   push:
     branches:
@@ -10,64 +9,60 @@ on:
 
 jobs:
   browserstack-tests:
+    name: 'BrowserStack Test'
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          cache: 'pip'  # Enable pip caching
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Set BrowserStack credentials
+      - name: Set BrowserStack Credentials
+        uses: microsoft/variable-substitution@v1 
+        with:
+          files: 'browserstack.json'
         env:
-          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
-          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-          LENDARY_EMAIL: ${{ secrets.LENDARY_EMAIL }}
-          LENDARY_PASSWORD: ${{ secrets.LENDARY_PASSWORD }}
-        run: |
-          echo "BROWSERSTACK_USERNAME=$BROWSERSTACK_USERNAME" >> $GITHUB_ENV
-          echo "BROWSERSTACK_ACCESS_KEY=$BROWSERSTACK_ACCESS_KEY" >> $GITHUB_ENV
-          echo "LENDARY_EMAIL=$LENDARY_EMAIL" >> $GITHUB_ENV
-          echo "LENDARY_PASSWORD=$LENDARY_PASSWORD" >> $GITHUB_ENV
+          username: ${{ secrets.BROWSERSTACK_USERNAME }}
+          access-key: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
 
-      - name: Start BrowserStack Local Tunnel
+      - name: Start BrowserStack Local
         uses: browserstack/github-actions/setup-local@master
         with:
-          local-testing: start
-          local-identifier: ${{ github.run_id }}  # Use workflow run ID as identifier
-        env:
-          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
-          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+          local-testing: true
+          local-identifier: ${{ github.run_id }}
 
       - name: Run Selenium tests
         run: |
-          python3 tests/test.py
-        continue-on-error: false  # Stop workflow if tests fail
+          echo "Running tests with configured environment"
+          python3 tests/unit/test_login.py
         env:
-          PYTHONUNBUFFERED: 1  # Enable real-time logging
+          TEST_EMAIL: ${{ vars.LENDARY_EMAIL }}
+          TEST_PASSWORD: ${{ vars.LENDARY_PASSWORD }}
+          PYTHONUNBUFFERED: 1
 
-      - name: Stop BrowserStack Local Tunnel
-        if: always()  # Ensure tunnel is stopped even if tests fail
+      - name: Stop BrowserStack Local
+        if: always()
         uses: browserstack/github-actions/setup-local@master
         with:
-          local-testing: stop
+          local-testing: false
+          local-identifier: ${{ github.run_id }}
 
       - name: Upload test artifacts
-        if: always()  # Upload logs even if tests fail
-        uses: actions/upload-artifact@v2
+        if: always()
+        uses: actions/upload-artifact@v3
         with:
           name: test-results
-          path: |
-            tests/logs/
-            tests/screenshots/
-            tests/reports/
+          path: tests/unit/logs/
           retention-days: 7

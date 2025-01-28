@@ -1,0 +1,16 @@
+{
+    "username": "",
+    "access-key": "",
+    "browserstackLocal": true,
+    "debug": true,
+    "capabilities": {
+        "build": "browserstack-build",
+        "project": "Lendary Website",
+        "browserName": "chrome",
+        "browserVersion": "latest",
+        "os": "Windows",
+        "os_version": "10",
+        "resolution": "1920x1080",
+        "selenium_version": "4.0.0"
+    }
+}

@@ -1,5 +1,0 @@
-2025-01-28 13:04:14,123 - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7a27bdd687f0>: Failed to resolve 'hub-cloud.browserstack.com' ([Errno -3] Temporary failure in name resolution)")': /wd/hub/session
-2025-01-28 13:04:31,041 - ERROR - Failed to setup WebDriver: Message: Authorization Required
-
-2025-01-28 13:04:31,041 - ERROR - Test failed: Message: Authorization Required
-

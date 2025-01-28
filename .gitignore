@@ -1,0 +1,9 @@
+.venv
+.vscode
+__pycache__/
+*.log
+*.json  # If it contains sensitive information
+.env
+logs
+reports
+screenshots

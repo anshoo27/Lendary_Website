@@ -9,15 +9,15 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
+from selenium.webdriver.remote.remote_connection import RemoteConnection, ClientConfig
 
-# Setup directories
+# Setup directories (Absolute paths)
 BASE_DIR = Path(__file__).parent
-LOGS_DIR = BASE_DIR / "logs"
-SCREENSHOTS_DIR = BASE_DIR / "screenshots"
-REPORTS_DIR = BASE_DIR / "reports"
-os.environ["BROWSERSTACK_USERNAME"] = "ashishsharma_DYPVeW"
-os.environ["BROWSERSTACK_ACCESS_KEY"] = "bhAtALSiW9TuNts"
-# Create directories if they don't exist
+LOGS_DIR = Path("/data/Lendary/Lendary_Website/logs")
+SCREENSHOTS_DIR = Path("/data/Lendary/Lendary_Website/screenshots")
+REPORTS_DIR = Path("/data/Lendary/Lendary_Website/reports")
+
+# Create directories if they *don't* exist
 for directory in [LOGS_DIR, SCREENSHOTS_DIR, REPORTS_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
@@ -60,17 +60,23 @@ class LendaryLoginTest:
             # Set capabilities
             options.set_capability('bstack:options', browserstack_options)
             
-            # Get BrowserStack credentials
-            username = os.getenv('BROWSERSTACK_USERNAME')
-            access_key = os.getenv('BROWSERSTACK_ACCESS_KEY')
+            # Get BrowserStack credentials from environment variables
+            username = os.environ.get('BROWSERSTACK_USERNAME')
+            access_key = os.environ.get('BROWSERSTACK_ACCESS_KEY')
             
             if not username or not access_key:
                 raise ValueError("BrowserStack credentials not found in environment variables")
             
-            self.driver = webdriver.Remote(
-                command_executor=f'https://{username}:{access_key}@hub-cloud.browserstack.com/wd/hub',
-                options=options
+            # Use ClientConfig for authentication (Corrected)
+            config = ClientConfig(
+                username=username, 
+                password=access_key, 
+                remote_server_addr="https://hub-cloud.browserstack.com/wd/hub"
             )
+            hub_url = "https://hub-cloud.browserstack.com/wd/hub"  # URL without credentials
+            executor = RemoteConnection(hub_url, client_config=config)
+            self.driver = webdriver.Remote(command_executor=executor, options=options)
+
             logger.info("WebDriver setup successful")
             
         except Exception as e:
@@ -94,25 +100,25 @@ class LendaryLoginTest:
             self.driver.get('https://stage-admin.lendary.xyz/login')
             logger.info("Navigated to login page")
             
-            # Wait for page title
-            WebDriverWait(self.driver, 10).until(EC.title_contains('Lendary Asia'))
+            # Wait for page title (adjust timeout if needed)
+            WebDriverWait(self.driver, 20).until(EC.title_contains('Lendary Asia'))
             
-            # Find and fill login form
-            username_field = WebDriverWait(self.driver, 10).until(
+            # Find and fill login form (adjust timeouts as needed)
+            username_field = WebDriverWait(self.driver, 20).until(
                 EC.presence_of_element_located((By.NAME, 'email'))
             )
-            password_field = WebDriverWait(self.driver, 10).until(
+            password_field = WebDriverWait(self.driver, 20).until(
                 EC.presence_of_element_located((By.NAME, 'password'))
             )
-            login_button = WebDriverWait(self.driver, 10).until(
+            login_button = WebDriverWait(self.driver, 20).until(
                 EC.presence_of_element_located(
                     (By.XPATH, '//*[@id="root"]/div/div[1]/div[2]/div[2]/div/form/div[3]/button')
                 )
             )
             
-            # Get credentials from environment variables
-            email = os.getenv('LENDARY_EMAIL', 'admin@lendary.com')
-            password = os.getenv('LENDARY_PASSWORD', 'Admin@123')
+            # Get credentials from environment variables (or use defaults)
+            email = os.environ.get('LENDARY_EMAIL', 'admin@lendary.com')
+            password = os.environ.get('LENDARY_PASSWORD', 'Admin@123')
             
             username_field.send_keys(email)
             password_field.send_keys(password)
@@ -120,10 +126,11 @@ class LendaryLoginTest:
             login_button.click()
             logger.info("Login credentials entered and submitted")
             
-            # Verify login success
-            WebDriverWait(self.driver, 10).until(EC.url_contains('/dashboard'))
-            WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.CLASS_NAME, 'style_header__FA-9C'))
+            # Verify login success (adjust timeouts and conditions as needed)
+            WebDriverWait(self.driver, 20).until(EC.url_contains('/dashboard'))
+            # Replace with a more robust locator if possible
+            WebDriverWait(self.driver, 20).until(
+                EC.presence_of_element_located((By.CLASS_NAME, 'style_header__FA-9C')) 
             )
             self.take_screenshot('after_login')
             

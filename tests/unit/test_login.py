@@ -1,4 +1,3 @@
-import json
 import os
 import logging
 from datetime import datetime
@@ -9,7 +8,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
-from selenium.webdriver.remote.remote_connection import RemoteConnection, ClientConfig
+from dotenv import load_dotenv
+import warnings
+
+# Suppress warnings about embedding credentials in the URL
+warnings.filterwarnings("ignore", category=UserWarning, module="selenium.webdriver.remote.remote_connection")
+
+# Load environment variables
+load_dotenv()
 
 # Setup directories (Absolute paths)
 BASE_DIR = Path(__file__).parent
@@ -43,22 +49,17 @@ class LendaryLoginTest:
         try:
             options = Options()
             
-            # BrowserStack capabilities (Corrected)
-            browserstack_options = {
-                'caps': {  # The 'caps' key is essential
-                    'browserName': 'Chrome',
-                    'browserVersion': 'latest',
-                    'os': 'Windows',
-                    'os_version': '10',
-                    'name': 'Lendary Login Test',
-                    'build': os.getenv('GITHUB_SHA', 'local_build'),
-                    'browserstack.local': 'true',
-                    'browserstack.debug': 'true',
-                    'browserstack.networkLogs': 'true',
-                    'browserstack.console': 'verbose'
-                }
-            }
-            options.set_capability('bstack:options', browserstack_options)
+            # BrowserStack capabilities
+            options.set_capability('browserName', 'Chrome')
+            options.set_capability('browserVersion', 'latest')
+            options.set_capability('platformName', 'Windows')
+            options.set_capability('platformVersion', '10')
+            options.set_capability('bstack:options', {
+                'local': 'false',  # Disable BrowserStack Local
+                'debug': 'true',
+                'networkLogs': 'true',
+                'consoleLogs': 'verbose'
+            })
             
             # Get BrowserStack credentials from environment variables
             username = os.environ.get('BROWSERSTACK_USERNAME')
@@ -67,11 +68,11 @@ class LendaryLoginTest:
             if not username or not access_key:
                 raise ValueError("BrowserStack credentials not found in environment variables")
             
-            # Use ClientConfig for authentication (Corrected & Updated)
-            config = ClientConfig(username=username, password=access_key)
-            hub_url = "https://hub-cloud.browserstack.com/wd/hub"  # URL without credentials
-            executor = RemoteConnection(url=hub_url, client_config=config) # Updated for DeprecationWarning
-            self.driver = webdriver.Remote(command_executor=executor, options=options)
+            # Initialize WebDriver with BrowserStack
+            self.driver = webdriver.Remote(
+                command_executor=f"https://{username}:{access_key}@hub-cloud.browserstack.com/wd/hub",
+                options=options
+            )
 
             logger.info("WebDriver setup successful")
             

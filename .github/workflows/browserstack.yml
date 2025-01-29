@@ -1,3 +1,5 @@
+name: Selenium Tests with BrowserStack
+
 on:
   push:
     branches:
@@ -8,12 +10,11 @@ on:
 
 jobs:
   browserstack-tests:
-    if: github.repository == 'https://github.com/anshoo27/Lendary_Website' # Replace with your repo name
     name: 'BrowserStack Test'
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -29,35 +30,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Set BrowserStack Credentials
-        uses: microsoft/variable-substitution@v1 
-        with:
-          files: 'browserstack.json'
-        env:
-          username: ${{ secrets.BROWSERSTACK_USERNAME }}
-          access-key: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-
-      - name: Start BrowserStack Local
-        uses: browserstack/github-actions/setup-local@master
-        with:
-          local-testing: true
-          local-identifier: ${{ github.run_id }}
-
       - name: Run Selenium tests
         run: |
-          echo "Running tests with configured environment"
           python3 tests/unit/test_login.py
         env:
-          TEST_EMAIL: ${{ secrets.LENDARY_EMAIL }}
-          TEST_PASSWORD: ${{ secrets.LENDARY_PASSWORD }}
+          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+          LENDARY_EMAIL: ${{ secrets.LENDARY_EMAIL }}
+          LENDARY_PASSWORD: ${{ secrets.LENDARY_PASSWORD }}
           PYTHONUNBUFFERED: 1
-
-      - name: Stop BrowserStack Local
-        if: always()
-        uses: browserstack/github-actions/setup-local@master
-        with:
-          local-testing: false
-          local-identifier: ${{ github.run_id }}
 
       - name: Upload test artifacts
         if: always()
@@ -66,71 +47,3 @@ jobs:
           name: test-results
           path: tests/unit/logs/
           retention-days: 7
-# name: Selenium Tests with BrowserStack
-
-# on:
-#   push:
-#     branches:
-#       - main
-#   pull_request:
-#     branches:
-#       - main
-
-# jobs:
-#   browserstack-tests:
-#     name: 'BrowserStack Test'
-#     runs-on: ubuntu-latest
-#     permissions:
-#       contents: read
-
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v3
-
-#       - name: Set up Python
-#         uses: actions/setup-python@v4
-#         with:
-#           python-version: '3.10'
-#           cache: 'pip'
-
-#       - name: Install dependencies
-#         run: |
-#           python -m pip install --upgrade pip
-#           pip install -r requirements.txt
-
-#       - name: Set BrowserStack Credentials
-#         uses: microsoft/variable-substitution@v1 
-#         with:
-#           files: 'browserstack.json'
-#         env:
-#           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
-#           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-#           LENDARY_EMAIL: ${{ secrets.LENDARY_EMAIL }}
-#           LENDARY_PASSWORD: ${{ secrets.LENDARY_PASSWORD }}
-
-#       - name: Start BrowserStack Local
-#         uses: browserstack/github-actions/setup-local@v1
-#         with:
-#           local: start
-#           local-identifier: ${{ github.run_id }}
-
-#       - name: Run Selenium tests
-#         run: |
-#           python3 tests/unit/test_login.py
-#         env:
-#           PYTHONUNBUFFERED: 1
-
-#       - name: Stop BrowserStack Local
-#         if: always()
-#         uses: browserstack/github-actions/setup-local@v1
-#         with:
-#           local: stop
-#           local-identifier: ${{ github.run_id }}
-
-#       - name: Upload test artifacts
-#         if: always()
-#         uses: actions/upload-artifact@v3
-#         with:
-#           name: test-results
-#           path: tests/unit/logs/
-#           retention-days: 7

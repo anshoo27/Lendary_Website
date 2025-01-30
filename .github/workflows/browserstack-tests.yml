@@ -102,5 +102,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: test-results
-          path: tests/unit/logs/
+          path: /data/Lendary/Lendary_Website/logs
           retention-days: 7

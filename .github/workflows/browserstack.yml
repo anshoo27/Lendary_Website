@@ -45,5 +45,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: test-results
-          path: /data/Lendary/Lendary_Website/logs
+          path: reports
           retention-days: 7
